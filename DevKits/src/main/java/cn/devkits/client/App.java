@@ -1,6 +1,7 @@
 package cn.devkits.client;
 
 import java.awt.AWTException;
+import java.awt.Menu;
 import java.awt.MenuItem;
 import java.awt.PopupMenu;
 import java.awt.SystemTray;
@@ -18,6 +19,10 @@ import javax.swing.JOptionPane;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import cn.devkits.client.task.WinNoticeTask;
+import cn.devkits.client.tray.MenuItemFactory;
+import cn.devkits.client.tray.MenuItemEnum;
+
 public class App
 {
     private static final Logger logger = LoggerFactory.getLogger(App.class);
@@ -31,7 +36,7 @@ public class App
                 TrayIcon trayIcon = new TrayIcon(ImageIO.read(App.class.getClassLoader().getResource("20.png")));
                 trayIcon.setImageAutoSize(true);
                 // 添加工具提示文本
-                trayIcon.setToolTip("本地连接\r\n速度：100.0 Mbps\r\n状态：已连接上");
+                trayIcon.setToolTip("开发工具包\r\n官网：www.devkits.cn");
 
                 initContextMenu(trayIcon);
                 initDbClick(trayIcon);
@@ -53,13 +58,21 @@ public class App
 
     private static void initContextMenu(TrayIcon trayIcon)
     {
-        // 创建弹出菜单
         PopupMenu popupMenu = new PopupMenu();
-        popupMenu.add(new MenuItem("禁用(D)"));
-        popupMenu.add(new MenuItem("状态(S)"));
-        popupMenu.add(new MenuItem("修复(P)"));
+
+        Menu myComputerItem = new Menu("我的电脑");
+
+        MenuItemFactory.createItem(myComputerItem, MenuItemEnum.USER_NAME);
+        MenuItemFactory.createItem(myComputerItem, MenuItemEnum.OS_NAME);
+        MenuItemFactory.createItem(myComputerItem, MenuItemEnum.OS_ARCH);
+        MenuItemFactory.createItem(myComputerItem, MenuItemEnum.CPU_ENDIAN);
+        MenuItemFactory.createItem(myComputerItem, MenuItemEnum.IP);
+        MenuItemFactory.createItem(myComputerItem, MenuItemEnum.MAC);
+
+        popupMenu.add(myComputerItem);
+
         popupMenu.addSeparator();
-        popupMenu.add(new MenuItem("更改 Windows 防火墙设置(C)"));
+        popupMenu.add(new MenuItem("关于..."));
         popupMenu.addSeparator();
         MenuItem quit = new MenuItem("退出");
         quit.addActionListener(new ActionListener()

@@ -4,7 +4,7 @@
 	<modelVersion>4.0.0</modelVersion>
 
 	<groupId>cn.devkits.client</groupId>
-	<artifactId>DevKits</artifactId>
+	<artifactId>devkits</artifactId>
 	<version>1.0.0</version>
 
 	<name>DevKits</name>

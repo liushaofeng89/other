@@ -1,4 +1,4 @@
-package cn.devkits.client;
+package cn.devkits.client.task;
 
 import java.awt.TrayIcon;
 import java.awt.TrayIcon.MessageType;
