@@ -2,7 +2,10 @@ package cn.devkits.client.task;
 
 import java.awt.TrayIcon;
 import java.awt.TrayIcon.MessageType;
+import java.util.Calendar;
 import java.util.TimerTask;
+
+import cn.devkits.client.util.Lunar;
 
 public class WinNoticeTask extends TimerTask
 {
@@ -13,8 +16,14 @@ public class WinNoticeTask extends TimerTask
     public WinNoticeTask(TrayIcon trayIcon)
     {
         this.trayIcon = trayIcon;
-        this.title = "重要提醒";
+        this.title = "今天是" + getLunar();
         this.content = "让我们健康、高效、快乐的工作...";
+    }
+
+    private String getLunar()
+    {
+        Lunar lunar = new Lunar(Calendar.getInstance());
+        return "农历" + lunar.toString();
     }
 
     @Override

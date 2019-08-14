@@ -17,7 +17,11 @@
 	</properties>
 
 	<dependencies>
-
+		<dependency>
+			<groupId>commons-codec</groupId>
+			<artifactId>commons-codec</artifactId>   <!-- 提供Hex、DigestUtils、Base64等 -->
+			<version>1.12</version>
+		</dependency>
 		<dependency>
 			<groupId>org.slf4j</groupId>
 			<artifactId>slf4j-api</artifactId>

@@ -1,13 +1,15 @@
 package cn.devkits.client.tray;
 
+import java.awt.Dimension;
 import java.awt.Menu;
 import java.awt.MenuItem;
+import java.awt.Toolkit;
 
 import cn.devkits.client.util.DKNetworkUtil;
 
 public class MenuItemFactory
 {
-    public static void createItem(Menu parentItem, MenuItemEnum itemType)
+    public static void createClipboardItem(Menu parentItem, MenuItemEnum itemType)
     {
         MenuItem menuItem = null;
         switch (itemType)
@@ -36,6 +38,13 @@ public class MenuItemFactory
                 menuItem = new MenuItem("CPU Endian: " + endian);
                 menuItem.addActionListener(new TrayItemClipboardListener(endian));
                 break;
+            case SCREEN_SIZE:
+                Dimension screenSize = Toolkit.getDefaultToolkit().getScreenSize();
+                String screenLabel = (int) screenSize.getWidth() + "*" + (int) screenSize.getHeight() + "(" + Toolkit.getDefaultToolkit().getScreenResolution() + "dpi)";
+                
+                menuItem = new MenuItem("Screen Size: " + screenLabel);
+                menuItem.addActionListener(new TrayItemClipboardListener(screenLabel));
+                break;
             case IP:
                 String internetIp = DKNetworkUtil.getInternetIp();
 
@@ -47,6 +56,22 @@ public class MenuItemFactory
 
                 menuItem = new MenuItem(itemType.toString() + ": " + mac);
                 menuItem.addActionListener(new TrayItemClipboardListener(mac));
+                break;
+
+            default:
+                break;
+        }
+        parentItem.add(menuItem);
+    }
+
+    public static void createComputeItem(Menu parentItem, MenuItemEnum itemType)
+    {
+        MenuItem menuItem = null;
+        switch (itemType)
+        {
+            case MD5:
+                menuItem = new MenuItem("MD5");
+                menuItem.addActionListener(new TrayItemMD5Listener());
                 break;
 
             default:

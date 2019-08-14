@@ -20,9 +20,14 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import cn.devkits.client.task.WinNoticeTask;
-import cn.devkits.client.tray.MenuItemFactory;
 import cn.devkits.client.tray.MenuItemEnum;
+import cn.devkits.client.tray.MenuItemFactory;
 
+/**
+ * theme:http://www.javasoft.de/synthetica/screenshots/plain/
+ * @author www.yudeshui.club
+ * @datetime 2019年8月14日 下午11:59:05
+ */
 public class App
 {
     private static final Logger logger = LoggerFactory.getLogger(App.class);
@@ -60,15 +65,21 @@ public class App
     {
         PopupMenu popupMenu = new PopupMenu();
 
-        Menu myComputerItem = new Menu("我的电脑");
+        Menu devMenu = new Menu("开发工具");
 
-        MenuItemFactory.createItem(myComputerItem, MenuItemEnum.USER_NAME);
-        MenuItemFactory.createItem(myComputerItem, MenuItemEnum.OS_NAME);
-        MenuItemFactory.createItem(myComputerItem, MenuItemEnum.OS_ARCH);
-        MenuItemFactory.createItem(myComputerItem, MenuItemEnum.CPU_ENDIAN);
-        MenuItemFactory.createItem(myComputerItem, MenuItemEnum.IP);
-        MenuItemFactory.createItem(myComputerItem, MenuItemEnum.MAC);
+        MenuItemFactory.createComputeItem(devMenu, MenuItemEnum.MD5);
 
+        Menu myComputerItem = new Menu("计算机");
+
+        MenuItemFactory.createClipboardItem(myComputerItem, MenuItemEnum.USER_NAME);
+        MenuItemFactory.createClipboardItem(myComputerItem, MenuItemEnum.OS_NAME);
+        MenuItemFactory.createClipboardItem(myComputerItem, MenuItemEnum.OS_ARCH);
+        MenuItemFactory.createClipboardItem(myComputerItem, MenuItemEnum.CPU_ENDIAN);
+        MenuItemFactory.createClipboardItem(myComputerItem, MenuItemEnum.SCREEN_SIZE);
+        MenuItemFactory.createClipboardItem(myComputerItem, MenuItemEnum.IP);
+        MenuItemFactory.createClipboardItem(myComputerItem, MenuItemEnum.MAC);
+
+        popupMenu.add(devMenu);
         popupMenu.add(myComputerItem);
 
         popupMenu.addSeparator();
@@ -107,6 +118,6 @@ public class App
     private static void initNotice(TrayIcon trayIcon)
     {
         Timer timer = new Timer();
-        timer.scheduleAtFixedRate(new WinNoticeTask(trayIcon), 500, 1000 * 60 * 30);// 半小时执行一次
+        timer.scheduleAtFixedRate(new WinNoticeTask(trayIcon), 1000, 1000 * 60 * 30);// 半小时执行一次
     }
 }
