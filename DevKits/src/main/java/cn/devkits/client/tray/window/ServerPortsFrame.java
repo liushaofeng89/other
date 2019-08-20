@@ -9,6 +9,9 @@ import java.awt.event.KeyAdapter;
 import java.awt.event.KeyEvent;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
+import java.util.concurrent.ArrayBlockingQueue;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 
 import javax.swing.JButton;
 import javax.swing.JFrame;
@@ -18,15 +21,22 @@ import javax.swing.JScrollPane;
 import javax.swing.JTextArea;
 import javax.swing.JTextField;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import cn.devkits.client.util.DKNetworkUtil;
 
 public class ServerPortsFrame extends JFrame
 {
     private static final long serialVersionUID = -6406148296636175804L;
 
+    private static final Logger LOGGER = LoggerFactory.getLogger(ServerPortsFrame.class);
+
     private static final int WINDOW_SIZE_WIDTH = 600;
     private static final int WINDOW_SIZE_HEIGHT = 400;
     private static final int PC_MAX_PORT = 65535;
+
+    private ArrayBlockingQueue<String> msgQuene = new ArrayBlockingQueue<String>(64);
 
     private JTextField addressInputField;
 
@@ -59,16 +69,20 @@ public class ServerPortsFrame extends JFrame
         createSearchBtn(northPane);
 
         this.userConsole = new JTextArea();
+        userConsole.setLineWrap(true);
         userConsole.setEditable(false);
 
         JScrollPane scrollPane = new JScrollPane();
-        scrollPane.setVerticalScrollBarPolicy(JScrollPane.VERTICAL_SCROLLBAR_ALWAYS);
+        scrollPane.setVerticalScrollBarPolicy(JScrollPane.VERTICAL_SCROLLBAR_AS_NEEDED);
+
+        Dimension size = userConsole.getPreferredSize(); 
+        scrollPane.setBounds(0, 0, size.width, size.height);
         
         scrollPane.setViewportView(userConsole);
 
         jRootPane.add(northPane, BorderLayout.NORTH);
         jRootPane.add(scrollPane, BorderLayout.CENTER);
-        
+
         return jRootPane;
     }
 
@@ -89,17 +103,25 @@ public class ServerPortsFrame extends JFrame
 
     private void startCheck(final String address)
     {
+        ExecutorService pool = Executors.newFixedThreadPool(Runtime.getRuntime().availableProcessors() + 1);
+
         for (int port = 1; port <= PC_MAX_PORT; port++)
         {
-            if (DKNetworkUtil.socketReachable(address, port))
+            pool.submit(new CheckPortThread(address, port));
+        }
+
+        while (true)
+        {
+            try
             {
-                userConsole.append("The port " + port + " is listening..." + System.getProperty("line.separator"));
-            } else
+                String take = msgQuene.take();
+                userConsole.append(take);
+
+                userConsole.update(userConsole.getGraphics());
+            } catch (InterruptedException e)
             {
-                userConsole.append("The address " + address + " with port " + port + " can not be reached!" + System.getProperty("line.separator"));
+                LOGGER.error("take check message error from 'msgQuene'!");
             }
-            userConsole.update(userConsole.getGraphics());
-            userConsole.setCaretPosition(userConsole.getText().length() - 1);
         }
     }
 
@@ -155,4 +177,34 @@ public class ServerPortsFrame extends JFrame
         return false;
     }
 
+    class CheckPortThread extends Thread
+    {
+
+        private String address;
+        private int port;
+
+        public CheckPortThread(String address, int port)
+        {
+            this.address = address;
+            this.port = port;
+        }
+
+        @Override
+        public void run()
+        {
+            try
+            {
+                if (DKNetworkUtil.socketReachable(address, port))
+                {
+                    msgQuene.put("The port " + port + " is listening..." + System.getProperty("line.separator"));
+                } else
+                {
+                    msgQuene.put("The address " + address + " with port " + port + " can not be reached!" + System.getProperty("line.separator"));
+                }
+            } catch (InterruptedException e)
+            {
+                LOGGER.error("put check message error to 'msgQuene'!");
+            }
+        }
+    }
 }
