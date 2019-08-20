@@ -1,9 +1,13 @@
 package cn.devkits.client.util;
 
+import java.io.IOException;
 import java.net.Inet4Address;
 import java.net.InetAddress;
+import java.net.InetSocketAddress;
 import java.net.NetworkInterface;
+import java.net.Socket;
 import java.net.SocketException;
+import java.net.UnknownHostException;
 import java.util.Enumeration;
 
 import org.slf4j.Logger;
@@ -12,6 +16,25 @@ import org.slf4j.LoggerFactory;
 public class DKNetworkUtil
 {
     private static final Logger LOGGER = LoggerFactory.getLogger(DKNetworkUtil.class);
+
+    public static boolean socketReachable(String address, int port)
+    {
+        try
+        {
+            Socket socket = new Socket();
+            socket.connect(new InetSocketAddress(address, port), 1000);
+            boolean portAvailable = socket.isConnected();
+            socket.close();
+            return portAvailable;
+        } catch (UnknownHostException uhe)
+        {
+            LOGGER.error("UnknownHostException: " + address);
+        } catch (IOException ioe)
+        {
+            LOGGER.error("Socket IOException: address is {} and port is {} ", address, port);
+        }
+        return false;
+    }
 
     /**
      * 获得内网IP
@@ -62,6 +85,10 @@ public class DKNetworkUtil
         }
     }
 
+    /**
+     * 获取本机MAC地址
+     * @return 本机MAC
+     */
     public static String getMac()
     {
         Enumeration<NetworkInterface> el;

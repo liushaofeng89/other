@@ -1,4 +1,4 @@
-package cn.devkits.client.tray;
+package cn.devkits.client.tray.listener;
 
 import java.awt.Toolkit;
 import java.awt.datatransfer.Clipboard;

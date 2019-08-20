@@ -10,13 +10,11 @@ import cn.devkits.client.util.Lunar;
 public class WinNoticeTask extends TimerTask
 {
     private TrayIcon trayIcon;
-    private String title;
     private String content;
 
     public WinNoticeTask(TrayIcon trayIcon)
     {
         this.trayIcon = trayIcon;
-        this.title = "今天是" + getLunar();
         this.content = "让我们健康、高效、快乐的工作...";
     }
 
@@ -29,6 +27,6 @@ public class WinNoticeTask extends TimerTask
     @Override
     public void run()
     {
-        trayIcon.displayMessage(title, content, MessageType.INFO);
+        trayIcon.displayMessage("今天是" + getLunar(), content, MessageType.INFO);
     }
 }

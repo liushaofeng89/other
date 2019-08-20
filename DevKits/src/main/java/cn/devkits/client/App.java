@@ -48,6 +48,7 @@ public class App
                 initNotice(trayIcon);
 
                 SystemTray.getSystemTray().add(trayIcon);
+                logger.info("初始化托盘功能成功！");
             } catch (AWTException e)
             {
                 logger.error("初始化托盘功能失败！");
@@ -65,11 +66,15 @@ public class App
     {
         PopupMenu popupMenu = new PopupMenu();
 
+        Menu networkMenu = new Menu("网络工具");
+        MenuItemFactory.createWindowItem(networkMenu, MenuItemEnum.SERVER_PORT);
+        popupMenu.add(networkMenu);
+
         Menu devMenu = new Menu("开发工具");
 
         MenuItemFactory.createComputeItem(devMenu, MenuItemEnum.MD5);
 
-        Menu myComputerItem = new Menu("计算机");
+        Menu myComputerItem = new Menu("计算机", true);
 
         MenuItemFactory.createClipboardItem(myComputerItem, MenuItemEnum.USER_NAME);
         MenuItemFactory.createClipboardItem(myComputerItem, MenuItemEnum.OS_NAME);
@@ -83,7 +88,7 @@ public class App
         popupMenu.add(myComputerItem);
 
         popupMenu.addSeparator();
-        popupMenu.add(new MenuItem("关于..."));
+        popupMenu.add("关于...");
         popupMenu.addSeparator();
         MenuItem quit = new MenuItem("退出");
         quit.addActionListener(new ActionListener()
@@ -118,6 +123,7 @@ public class App
     private static void initNotice(TrayIcon trayIcon)
     {
         Timer timer = new Timer();
-        timer.scheduleAtFixedRate(new WinNoticeTask(trayIcon), 1000, 1000 * 60 * 30);// 半小时执行一次
+        long time = 1000 * 60 * 30;// 半小时执行一次
+        timer.scheduleAtFixedRate(new WinNoticeTask(trayIcon), time, time);
     }
 }

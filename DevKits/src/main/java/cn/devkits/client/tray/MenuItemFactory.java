@@ -5,10 +5,33 @@ import java.awt.Menu;
 import java.awt.MenuItem;
 import java.awt.Toolkit;
 
+import cn.devkits.client.tray.listener.TrayItemClipboardListener;
+import cn.devkits.client.tray.listener.TrayItemWindowListener;
 import cn.devkits.client.util.DKNetworkUtil;
 
 public class MenuItemFactory
 {
+    public static void createWindowItem(Menu parentItem, MenuItemEnum itemType)
+    {
+        MenuItem menuItem = null;
+        switch (itemType)
+        {
+            case SERVER_PORT:
+                menuItem = new MenuItem("Server Ports");
+                menuItem.addActionListener(new TrayItemWindowListener());
+                break;
+
+            default:
+                break;
+        }
+        parentItem.add(menuItem);
+    }
+
+    /**
+     * 创建剪贴板菜单，单机该菜单以后，该菜单标识的关键信息就会被复制到剪贴板
+     * @param parentItem 父菜单
+     * @param itemType 当前待创建菜单枚举
+     */
     public static void createClipboardItem(Menu parentItem, MenuItemEnum itemType)
     {
         MenuItem menuItem = null;
@@ -41,7 +64,7 @@ public class MenuItemFactory
             case SCREEN_SIZE:
                 Dimension screenSize = Toolkit.getDefaultToolkit().getScreenSize();
                 String screenLabel = (int) screenSize.getWidth() + "*" + (int) screenSize.getHeight() + "(" + Toolkit.getDefaultToolkit().getScreenResolution() + "dpi)";
-                
+
                 menuItem = new MenuItem("Screen Size: " + screenLabel);
                 menuItem.addActionListener(new TrayItemClipboardListener(screenLabel));
                 break;
@@ -71,7 +94,7 @@ public class MenuItemFactory
         {
             case MD5:
                 menuItem = new MenuItem("MD5");
-                menuItem.addActionListener(new TrayItemMD5Listener());
+                menuItem.addActionListener(new TrayItemWindowListener());
                 break;
 
             default:
@@ -79,4 +102,5 @@ public class MenuItemFactory
         }
         parentItem.add(menuItem);
     }
+
 }
