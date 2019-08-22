@@ -66,15 +66,16 @@ public class App
     {
         PopupMenu popupMenu = new PopupMenu();
 
-        Menu networkMenu = new Menu("网络工具");
+        Menu networkMenu = new Menu("Network Tools");
         MenuItemFactory.createWindowItem(networkMenu, MenuItemEnum.SERVER_PORT);
         popupMenu.add(networkMenu);
 
-        Menu devMenu = new Menu("开发工具");
+        Menu devMenu = new Menu("Development Tools");
 
-        MenuItemFactory.createComputeItem(devMenu, MenuItemEnum.MD5);
+        // MenuItemFactory.createComputeItem(devMenu, MenuItemEnum.MD5);
+        MenuItemFactory.createComputeItem(devMenu, MenuItemEnum.CODE_FORMAT);
 
-        Menu myComputerItem = new Menu("计算机", true);
+        Menu myComputerItem = new Menu("Computer", true);
 
         MenuItemFactory.createClipboardItem(myComputerItem, MenuItemEnum.USER_NAME);
         MenuItemFactory.createClipboardItem(myComputerItem, MenuItemEnum.OS_NAME);
@@ -88,9 +89,9 @@ public class App
         popupMenu.add(myComputerItem);
 
         popupMenu.addSeparator();
-        popupMenu.add("关于...");
+        popupMenu.add("About...");
         popupMenu.addSeparator();
-        MenuItem quit = new MenuItem("退出");
+        MenuItem quit = new MenuItem("Exit");
         quit.addActionListener(new ActionListener()
         {
             @Override

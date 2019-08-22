@@ -17,8 +17,8 @@ public class MenuItemFactory
         switch (itemType)
         {
             case SERVER_PORT:
-                menuItem = new MenuItem("Server Ports");
-                menuItem.addActionListener(new TrayItemWindowListener());
+                menuItem = new MenuItem("Server Ports Detect");
+                menuItem.addActionListener(new TrayItemWindowListener(MenuItemEnum.SERVER_PORT));
                 break;
 
             default:
@@ -92,9 +92,13 @@ public class MenuItemFactory
         MenuItem menuItem = null;
         switch (itemType)
         {
-            case MD5:
-                menuItem = new MenuItem("MD5");
-                menuItem.addActionListener(new TrayItemWindowListener());
+            case CODEC:
+                menuItem = new MenuItem("Codec");
+                menuItem.addActionListener(new TrayItemWindowListener(MenuItemEnum.CODEC));
+                break;
+            case CODE_FORMAT:
+                menuItem = new MenuItem("Code Format");
+                menuItem.addActionListener(new TrayItemWindowListener(MenuItemEnum.CODE_FORMAT));
                 break;
 
             default:

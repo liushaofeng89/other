@@ -5,17 +5,43 @@ import java.awt.event.ActionListener;
 
 import javax.swing.JFrame;
 
+import cn.devkits.client.tray.MenuItemEnum;
+import cn.devkits.client.tray.window.CodeFormatFrame;
 import cn.devkits.client.tray.window.ServerPortsFrame;
 
 public class TrayItemWindowListener implements ActionListener
 {
 
+    private MenuItemEnum itemEnum;
+
+    public TrayItemWindowListener(MenuItemEnum codeFormat)
+    {
+        this.itemEnum = codeFormat;
+    }
+
     @Override
     public void actionPerformed(ActionEvent e)
     {
-        ServerPortsFrame serverPortsWindow = new ServerPortsFrame();
-        serverPortsWindow.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-        serverPortsWindow.setVisible(true);
+        JFrame frame = null;
+        switch (itemEnum)
+        {
+            case CODEC:
+
+                break;
+            case SERVER_PORT:
+                frame = new ServerPortsFrame();
+                break;
+            case CODE_FORMAT:
+                frame = new CodeFormatFrame();
+                break;
+
+            default:
+                break;
+        }
+
+        frame.setDefaultCloseOperation(JFrame.HIDE_ON_CLOSE);
+        frame.pack();
+        frame.setVisible(true);
     }
 
 }

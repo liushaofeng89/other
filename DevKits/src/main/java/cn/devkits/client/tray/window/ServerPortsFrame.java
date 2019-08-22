@@ -3,18 +3,25 @@ package cn.devkits.client.tray.window;
 import java.awt.BorderLayout;
 import java.awt.Dimension;
 import java.awt.Toolkit;
+import java.awt.datatransfer.Clipboard;
+import java.awt.datatransfer.StringSelection;
+import java.awt.datatransfer.Transferable;
 import java.awt.event.FocusAdapter;
 import java.awt.event.FocusEvent;
 import java.awt.event.KeyAdapter;
 import java.awt.event.KeyEvent;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.concurrent.ArrayBlockingQueue;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
+import java.util.concurrent.TimeUnit;
 
 import javax.swing.JButton;
 import javax.swing.JFrame;
+import javax.swing.JOptionPane;
 import javax.swing.JPanel;
 import javax.swing.JRootPane;
 import javax.swing.JScrollPane;
@@ -24,19 +31,18 @@ import javax.swing.JTextField;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import cn.devkits.client.model.SocketReachableModel;
 import cn.devkits.client.util.DKNetworkUtil;
 
-public class ServerPortsFrame extends JFrame
+public class ServerPortsFrame extends JFrame implements DKWindowable
 {
     private static final long serialVersionUID = -6406148296636175804L;
 
     private static final Logger LOGGER = LoggerFactory.getLogger(ServerPortsFrame.class);
 
-    private static final int WINDOW_SIZE_WIDTH = 600;
-    private static final int WINDOW_SIZE_HEIGHT = 400;
-    private static final int PC_MAX_PORT = 65535;
+    private static final int SERVER_MAX_PORT = 65535;
 
-    private ArrayBlockingQueue<String> msgQuene = new ArrayBlockingQueue<String>(64);
+    private ArrayBlockingQueue<SocketReachableModel> msgQuene = new ArrayBlockingQueue<SocketReachableModel>(64);
 
     private JTextField addressInputField;
 
@@ -44,9 +50,11 @@ public class ServerPortsFrame extends JFrame
 
     private JTextArea userConsole;
 
+    private JScrollPane scrollPane;
+
     public ServerPortsFrame()
     {
-        super("Server Ports Check");
+        super("Server Ports Detection");
         super.setSize(WINDOW_SIZE_WIDTH, WINDOW_SIZE_HEIGHT);
 
         Toolkit tk = Toolkit.getDefaultToolkit();
@@ -68,16 +76,12 @@ public class ServerPortsFrame extends JFrame
         createInputTextField(northPane);
         createSearchBtn(northPane);
 
-        this.userConsole = new JTextArea();
+        this.userConsole = new JTextArea(20, 50);
+        userConsole.setAutoscrolls(true);
         userConsole.setLineWrap(true);
-        userConsole.setEditable(false);
 
-        JScrollPane scrollPane = new JScrollPane();
-        scrollPane.setVerticalScrollBarPolicy(JScrollPane.VERTICAL_SCROLLBAR_AS_NEEDED);
-
-        Dimension size = userConsole.getPreferredSize(); 
-        scrollPane.setBounds(0, 0, size.width, size.height);
-        
+        this.scrollPane = new JScrollPane();
+        scrollPane.setVerticalScrollBarPolicy(JScrollPane.VERTICAL_SCROLLBAR_ALWAYS);
         scrollPane.setViewportView(userConsole);
 
         jRootPane.add(northPane, BorderLayout.NORTH);
@@ -86,7 +90,7 @@ public class ServerPortsFrame extends JFrame
         return jRootPane;
     }
 
-    private void createSearchBtn(JPanel northPanel)
+    private void createSearchBtn(final JPanel northPanel)
     {
         this.searchBtn = new JButton("查询");
         searchBtn.addMouseListener(new MouseAdapter()
@@ -95,37 +99,61 @@ public class ServerPortsFrame extends JFrame
             public void mouseReleased(MouseEvent e)
             {
                 userConsole.append("start to check port on server " + addressInputField.getText() + " ..." + System.getProperty("line.separator"));
-                startCheck(addressInputField.getText());
+                startCheck(northPanel, addressInputField.getText());
             }
         });
         northPanel.add(searchBtn, BorderLayout.EAST);
     }
 
-    private void startCheck(final String address)
+    private void startCheck(JPanel northPanel, final String address)
     {
-        ExecutorService pool = Executors.newFixedThreadPool(Runtime.getRuntime().availableProcessors() + 1);
+        List<String> ports = new ArrayList<String>();
 
-        for (int port = 1; port <= PC_MAX_PORT; port++)
+        long start = System.currentTimeMillis();
+        ExecutorService pool = Executors.newFixedThreadPool(1000);
+
+        for (int port = 1; port <= SERVER_MAX_PORT; port++)
         {
             pool.submit(new CheckPortThread(address, port));
         }
 
+        pool.shutdown();
+
         while (true)
         {
+            if (pool.isTerminated() && msgQuene.isEmpty())
+            {
+                String duration = String.valueOf(System.currentTimeMillis() - start - 10 * 1000);
+                userConsole.insert("This detection took a total of " + duration + " milliseconds" + System.getProperty("line.separator"), 0);
+                String portsStr = String.join(",", ports);
+                userConsole.insert("These ports are listening on server " + address + ": " + portsStr + System.getProperty("line.separator"), 0);
+
+                Clipboard clip = Toolkit.getDefaultToolkit().getSystemClipboard();
+                Transferable tText = new StringSelection(portsStr);
+                clip.setContents(tText, null);
+
+                JOptionPane.showMessageDialog(northPanel, "The ports are listening has been copied to the clipboard!");
+                return;
+            }
+
             try
             {
-                String take = msgQuene.take();
-                userConsole.append(take);
+                SocketReachableModel take = msgQuene.poll(10, TimeUnit.SECONDS);
+                if (take != null)
+                {
+                    userConsole.insert(take.getMsg(), 0);
+                    ports.add(take.getPort());
 
-                userConsole.update(userConsole.getGraphics());
+                    userConsole.update(userConsole.getGraphics());
+                }
             } catch (InterruptedException e)
             {
-                LOGGER.error("take check message error from 'msgQuene'!");
+                e.printStackTrace();
             }
         }
     }
 
-    private void createInputTextField(JPanel northPanel)
+    private void createInputTextField(final JPanel northPanel)
     {
         final String defaultText = "input domain or ip address please...";
 
@@ -163,7 +191,7 @@ public class ServerPortsFrame extends JFrame
                 if (e.getKeyCode() == KeyEvent.VK_ENTER)
                 {
                     userConsole.append("start to check port on server " + textField.getText() + " ..." + System.getProperty("line.separator"));
-                    startCheck(textField.getText());
+                    startCheck(northPanel, textField.getText());
                 }
             }
         });
@@ -196,11 +224,12 @@ public class ServerPortsFrame extends JFrame
             {
                 if (DKNetworkUtil.socketReachable(address, port))
                 {
-                    msgQuene.put("The port " + port + " is listening..." + System.getProperty("line.separator"));
-                } else
-                {
-                    msgQuene.put("The address " + address + " with port " + port + " can not be reached!" + System.getProperty("line.separator"));
+                    msgQuene.put(new SocketReachableModel(port, true, "The port " + port + " is listening..." + System.getProperty("line.separator")));
                 }
+                // else
+                // {
+                // msgQuene.put(new SocketReachableModel(port, false, "The address " + address + " with port " + port + " can not be reached!" + System.getProperty("line.separator")));
+                // }
             } catch (InterruptedException e)
             {
                 LOGGER.error("put check message error to 'msgQuene'!");
