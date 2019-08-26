@@ -41,6 +41,8 @@ public class ServerPortsFrame extends JFrame implements DKWindowable
     private static final Logger LOGGER = LoggerFactory.getLogger(ServerPortsFrame.class);
 
     private static final int SERVER_MAX_PORT = 65535;
+    // 端口检查线程
+    private static final int MAX_THREAD = 4000;
 
     private ArrayBlockingQueue<SocketReachableModel> msgQuene = new ArrayBlockingQueue<SocketReachableModel>(64);
 
@@ -107,10 +109,9 @@ public class ServerPortsFrame extends JFrame implements DKWindowable
 
     private void startCheck(JPanel northPanel, final String address)
     {
-        List<String> ports = new ArrayList<String>();
-
         long start = System.currentTimeMillis();
-        ExecutorService pool = Executors.newFixedThreadPool(1000);
+
+        ExecutorService pool = Executors.newFixedThreadPool(MAX_THREAD);
 
         for (int port = 1; port <= SERVER_MAX_PORT; port++)
         {
@@ -118,39 +119,7 @@ public class ServerPortsFrame extends JFrame implements DKWindowable
         }
 
         pool.shutdown();
-
-        while (true)
-        {
-            if (pool.isTerminated() && msgQuene.isEmpty())
-            {
-                String duration = String.valueOf(System.currentTimeMillis() - start - 10 * 1000);
-                userConsole.insert("This detection took a total of " + duration + " milliseconds" + System.getProperty("line.separator"), 0);
-                String portsStr = String.join(",", ports);
-                userConsole.insert("These ports are listening on server " + address + ": " + portsStr + System.getProperty("line.separator"), 0);
-
-                Clipboard clip = Toolkit.getDefaultToolkit().getSystemClipboard();
-                Transferable tText = new StringSelection(portsStr);
-                clip.setContents(tText, null);
-
-                JOptionPane.showMessageDialog(northPanel, "The ports are listening has been copied to the clipboard!");
-                return;
-            }
-
-            try
-            {
-                SocketReachableModel take = msgQuene.poll(10, TimeUnit.SECONDS);
-                if (take != null)
-                {
-                    userConsole.insert(take.getMsg(), 0);
-                    ports.add(take.getPort());
-
-                    userConsole.update(userConsole.getGraphics());
-                }
-            } catch (InterruptedException e)
-            {
-                e.printStackTrace();
-            }
-        }
+        new UpdateConsoleThread(pool, northPanel, address, start).start();
     }
 
     private void createInputTextField(final JPanel northPanel)
@@ -203,6 +172,61 @@ public class ServerPortsFrame extends JFrame implements DKWindowable
     public boolean isResizable()
     {
         return false;
+    }
+
+    class UpdateConsoleThread extends Thread
+    {
+        private List<String> ports = new ArrayList<String>();
+        private long start;
+        private JPanel northPanel;
+        private String address;
+        private ExecutorService pool;
+
+        public UpdateConsoleThread(ExecutorService pool, JPanel northPanel, String address, long startTime)
+        {
+            this.pool = pool;
+            this.northPanel = northPanel;
+            this.address = address;
+            this.start = startTime;
+        }
+
+        @Override
+        public void run()
+        {
+            while (true)
+            {
+                if (pool.isTerminated() && msgQuene.isEmpty())
+                {
+                    String duration = String.valueOf(System.currentTimeMillis() - start - 1 * 1000);
+                    userConsole.insert("This detection took a total of " + duration + " milliseconds" + System.getProperty("line.separator"), 0);
+                    String portsStr = String.join(",", ports);
+                    userConsole.insert("These ports are listening on server " + address + ": " + portsStr + System.getProperty("line.separator"), 0);
+
+                    Clipboard clip = Toolkit.getDefaultToolkit().getSystemClipboard();
+                    Transferable tText = new StringSelection(portsStr);
+                    clip.setContents(tText, null);
+
+                    JOptionPane.showMessageDialog(northPanel, "The ports are listening has been copied to the clipboard!");
+                    return;
+                }
+
+                try
+                {
+                    SocketReachableModel take = msgQuene.poll(1, TimeUnit.SECONDS);
+                    if (take != null)
+                    {
+                        userConsole.insert(take.getMsg(), 0);
+                        ports.add(take.getPort());
+
+                        userConsole.update(userConsole.getGraphics());
+                    }
+                } catch (InterruptedException e)
+                {
+                    e.printStackTrace();
+                }
+            }
+        }
+
     }
 
     class CheckPortThread extends Thread
